@@ -21,10 +21,25 @@ jobs:
         run: |
           gh issue view ${{ github.event.inputs.issue }} --json title,body > issue.json
 
-      - name: Analyze with AI (placeholder)
+      - name: Analyze (structured output)
         run: |
-          echo "ANALYSIS PLACEHOLDER" > analysis.txt
-          echo "Issue analyzed: ${{ github.event.inputs.issue }}" >> analysis.txt
+          TITLE=$(jq -r '.title' issue.json)
+          BODY=$(jq -r '.body' issue.json)
+
+          cat > analysis.txt << 'EOT'
+Issue Analysis
+
+Title:
+$TITLE
+
+Body:
+$BODY
+
+Status:
+- fetched: yes
+- parsed: yes
+- AI: not yet connected
+EOT
 
       - name: Comment result
         env:
@@ -32,5 +47,3 @@ jobs:
         run: |
           gh issue comment ${{ github.event.inputs.issue }} \
             --body-file analysis.txt
-
-# reindex trigger
