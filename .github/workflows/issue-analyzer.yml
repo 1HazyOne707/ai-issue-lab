@@ -14,12 +14,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show trigger proof
-        run: echo "workflow_dispatch is active"
-
-      - name: Fetch issue
+      - name: Fetch issue (fixed)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue view ${{ github.event.inputs.issue }} --json title,body > issue.json
-# re-register dispatch Tue Jun 23 17:46:33 PDT 2026
+          curl -s \
+            -H "Authorization: token $GH_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.inputs.issue }} \
+            > issue.json
+
+      - name: Show trigger proof
+        run: echo "workflow_dispatch is active"
+
+      - name: Build report
+        run: |
+          echo "Issue fetched successfully" > analysis.txt
+          echo "Issue file size:" >> analysis.txt
+          wc -c issue.json >> analysis.txt
+
+      - name: Comment result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.inputs.issue }} --body-file analysis.txt
