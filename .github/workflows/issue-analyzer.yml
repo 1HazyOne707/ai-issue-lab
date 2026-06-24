@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch issue (fixed)
+      - name: Fetch issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -23,17 +23,17 @@ jobs:
             https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.inputs.issue }} \
             > issue.json
 
-      - name: Show trigger proof
-        run: echo "workflow_dispatch is active"
-
       - name: Build report
         run: |
-          echo "Issue fetched successfully" > analysis.txt
-          echo "Issue file size:" >> analysis.txt
+          echo "Issue Analyzer Report" > analysis.txt
+          echo "" >> analysis.txt
+          echo "Raw issue size:" >> analysis.txt
           wc -c issue.json >> analysis.txt
 
       - name: Comment result
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.inputs.issue }} --body-file analysis.txt
+          gh issue comment ${{ github.event.inputs.issue }} \
+            -R ${{ github.repository }} \
+            --body-file analysis.txt
