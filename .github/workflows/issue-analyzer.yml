@@ -27,13 +27,16 @@ jobs:
         run: |
           echo "Issue Analyzer Report" > analysis.txt
           echo "" >> analysis.txt
-          echo "Raw issue size:" >> analysis.txt
-          wc -c issue.json >> analysis.txt
+          jq -r '.title' issue.json >> analysis.txt
+          echo "" >> analysis.txt
+          jq -r '.body' issue.json >> analysis.txt
 
       - name: Comment result
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.inputs.issue }} \
-            -R ${{ github.repository }} \
-            --body-file analysis.txt
+          curl -s -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.inputs.issue }}/comments \
+            -d "{\"body\": $(jq -Rs . < analysis.txt)}"
