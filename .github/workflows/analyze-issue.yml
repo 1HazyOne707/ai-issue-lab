@@ -22,3 +22,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue view ${{ github.event.inputs.issue }} --json title,body > issue.json
+# re-register dispatch Tue Jun 23 17:46:33 PDT 2026
