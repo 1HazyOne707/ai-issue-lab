@@ -1,0 +1,35 @@
+name: Issue Analyzer
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Issue number to analyze"
+        required: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get issue content
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue view ${{ github.event.inputs.issue }} --json title,body > issue.json
+
+      - name: Analyze with AI (placeholder)
+        run: |
+          echo "ANALYSIS PLACEHOLDER" > analysis.txt
+          echo "Issue analyzed: ${{ github.event.inputs.issue }}" >> analysis.txt
+
+      - name: Comment result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.inputs.issue }} \
+            --body-file analysis.txt
+
