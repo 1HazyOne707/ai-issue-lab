@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       issue:
-        description: "Issue number to analyze"
         required: true
+        type: number
 
 jobs:
   analyze:
@@ -14,34 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Show trigger proof
+        run: echo "workflow_dispatch is active"
+
       - name: Fetch issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue view ${{ github.event.inputs.issue }} --json title,body > issue.json
-
-      - name: Build report
-        run: |
-          TITLE=$(jq -r '.title' issue.json)
-          BODY=$(jq -r '.body' issue.json)
-
-          cat > analysis.txt << EOF2
-Issue Analyzer Report
-
-Title:
-$TITLE
-
-Body:
-$BODY
-
-Status:
-- workflow_dispatch: active
-- issue fetched: yes
-- analysis: basic
-EOF2
-
-      - name: Comment result
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue comment ${{ github.event.inputs.issue }} --body-file analysis.txt
