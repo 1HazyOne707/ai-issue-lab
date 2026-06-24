@@ -12,22 +12,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Get issue content
+      - name: Fetch issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue view ${{ github.event.inputs.issue }} --json title,body > issue.json
 
-      - name: Analyze (structured output)
+      - name: Build report
         run: |
           TITLE=$(jq -r '.title' issue.json)
           BODY=$(jq -r '.body' issue.json)
 
-          cat > analysis.txt << 'EOT'
-Issue Analysis
+          cat > analysis.txt << EOF2
+Issue Analyzer Report
 
 Title:
 $TITLE
@@ -36,14 +35,13 @@ Body:
 $BODY
 
 Status:
-- fetched: yes
-- parsed: yes
-- AI: not yet connected
-EOT
+- workflow_dispatch: active
+- issue fetched: yes
+- analysis: basic
+EOF2
 
       - name: Comment result
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.inputs.issue }} \
-            --body-file analysis.txt
+          gh issue comment ${{ github.event.inputs.issue }} --body-file analysis.txt
