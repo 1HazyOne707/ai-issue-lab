@@ -33,3 +33,4 @@ jobs:
           gh issue comment ${{ github.event.inputs.issue }} \
             --body-file analysis.txt
 
+# reindex trigger
