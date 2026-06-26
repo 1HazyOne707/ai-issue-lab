@@ -7,14 +7,12 @@ on:
         required: true
       repo:
         required: true
-      issue_number:
+      issue:
         required: true
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ github.event.inputs.owner }}
           REPO: ${{ github.event.inputs.repo }}
-          ISSUE: ${{ github.event.inputs.issue_number }}
+          ISSUE: ${{ github.event.inputs.issue }}
         run: |
           python3 << 'PY'
           import os, json, urllib.request
@@ -43,62 +41,6 @@ jobs:
 
           issue = gh(f"/repos/{owner}/{repo}/issues/{issue_num}")
           comments = gh(f"/repos/{owner}/{repo}/issues/{issue_num}/comments")
-          repo_info = gh(f"/repos/{owner}/{repo}")
-          tree = gh(f"/repos/{owner}/{repo}/git/trees/{repo_info['default_branch']}?recursive=1")
 
-          text = (issue.get("title","") + " " + issue.get("body","")).lower()
-
-          claimed_keywords = [
-              "i'm working", "working on it", "i will take", "assigned me",
-              "i'm taking", "started work", "picking this up"
-          ]
-
-          claimed = any(k in text for k in claimed_keywords)
-
-          files = [f["path"] for f in tree.get("tree", []) if f["type"] == "blob"]
-
-          score_hits = {}
-          for f in files:
-              low = f.lower()
-              score = 0
-              for word in text.split():
-                  if len(word) > 4 and word in low:
-                      score += 1
-              if score > 0:
-                  score_hits[f] = score
-
-          ranked = sorted(score_hits.items(), key=lambda x: x[1], reverse=True)[:15]
-
-          analysis = {
-              "repo": f"{owner}/{repo}",
-              "issue": issue_num,
-              "title": issue.get("title"),
-              "claimed": claimed,
-              "top_files": ranked,
-              "file_count": len(files),
-              "state": issue.get("state")
-          }
-
-          md = []
-          md.append(f"# Issue Analysis\n")
-          md.append(f"Repo: {owner}/{repo}")
-          md.append(f"Issue: #{issue_num}")
-          md.append(f"Title: {issue.get('title')}")
-          md.append(f"State: {issue.get('state')}")
-          md.append(f"Claimed: {claimed}")
-          md.append("")
-          md.append("## Top Candidate Files")
-          for f, s in ranked:
-              md.append(f"- {f} ({s})")
-
-          open("analysis.json","w").write(json.dumps(analysis, indent=2))
-          open("analysis.md","w").write("\n".join(md))
+          print(issue["title"])
           PY
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: issue-analysis
-          path: |
-            analysis.md
-            analysis.json
